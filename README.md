@@ -46,6 +46,17 @@ Results:
 | Name | Type | Description |
 |------|------|-------------|
 | `summary` | Object | `{"doi", "recordUrl", "filesCount", "totalBytes"}` of the extracted dataset |
+| `logs` | Object, relayed via **file pipe** | Progress log entries (`{"severity", "content"}`) |
+
+To see the progress while the lambda runs, map the `logs` result to the task
+audit log (or the workflow audit log) in the workflow's task definition. The
+lambda reports each stage — initialized, resolving the DOI, downloading the
+dataset, extracting and uploading it to Onedata, finished — and, during the
+download and the upload, the amount transferred so far every 30 seconds.
+
+Extraction and upload are a single stage: the archive is extracted directly
+into the Onedata directory. If the `logs` result is not declared, the lambda
+still works, only without progress reporting.
 
 The archive is downloaded to the container's temporary directory before it is
 extracted, so the lambda needs ephemeral storage of about twice the size of the

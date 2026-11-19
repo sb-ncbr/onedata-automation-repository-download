@@ -94,11 +94,15 @@ def _serve_record(server, archive: bytes, *, negotiates_json: bool = True):
     }
 
 
-def _run(tmp_path, doi=DOI, destination_type="DIR"):
+def _run_local(tmp_path, doi=DOI, destination_type="DIR"):
     out_dir = tmp_path / "out"
     out_dir.mkdir()
     args = {"doi": doi, "destination": {"fileId": DIR_ID, "type": destination_type}}
-    return run_local(handle, build_request([args]), out_dir=out_dir).envelope
+    return run_local(handle, build_request([args]), out_dir=out_dir)
+
+
+def _run(tmp_path, doi=DOI, destination_type="DIR"):
+    return _run_local(tmp_path, doi, destination_type).envelope
 
 
 def _tree(directory) -> dict[str, bytes]:
@@ -142,6 +146,44 @@ def test_extracts_zip_files_of_the_record_in_place(repository, destination, tmp_
         "dataset/inner.zip": b"kept as is",
         "notes.txt": b"n",
     }
+
+
+def test_logs_progress_stages(repository, destination, tmp_path):
+    _serve_record(repository, _zip({"readme.txt": b"hello", "data/a.csv": b"1,2,3"}))
+
+    result = _run_local(tmp_path)
+
+    assert result.streams["logs"] == [
+        {"severity": "info", "content": content}
+        for content in [
+            f"Lambda initialized for DOI {DOI}",
+            "Resolving DOI and fetching record metadata",
+            f"Downloading dataset from {repository.url}/api/records/abcde-12345/files-archive",
+            "Dataset downloaded (0.0 MB)",
+            "Extracting dataset and uploading it to Onedata",
+            "Finished: uploaded 2 files (0.0 MB)",
+        ]
+    ]
+
+
+def test_logs_periodic_progress(repository, destination, tmp_path, monkeypatch):
+    monkeypatch.setattr(handler, "PROGRESS_INTERVAL_SEC", 0.0)
+    _serve_record(repository, _zip({"a.txt": b"a"}))
+
+    contents = [entry["content"] for entry in _run_local(tmp_path).streams["logs"]]
+
+    assert "Downloaded 0.0 MB" in contents
+    assert "Uploaded 0 files (0.0 MB) to Onedata" in contents
+
+
+def test_works_when_log_stream_is_not_writable(repository, destination, tmp_path, monkeypatch):
+    _serve_record(repository, _zip({"a.txt": b"a"}))
+    monkeypatch.setattr(handler.Logger, "info", lambda *_: (_ for _ in ()).throw(OSError()))
+
+    envelope = _run(tmp_path)
+
+    assert envelope["resultsBatch"][0]["summary"]["filesCount"] == 1
+    assert _tree(destination) == {"a.txt": b"a"}
 
 
 def test_falls_back_to_api_when_landing_page_is_html(repository, destination, tmp_path):

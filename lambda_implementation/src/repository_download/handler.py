@@ -10,19 +10,23 @@ themselves zip archives are extracted in place instead of being stored as `.zip`
 import os
 import re
 import tempfile
+import time
 import zipfile
-from collections.abc import Callable
-from typing import IO, TypedDict
+from typing import TypedDict
 from urllib.parse import urlsplit
 
 import requests
 from onedata_lambda_sdk import AtmFile, Job, JobContext, JobException, per_job
+from onedata_lambda_sdk.logging import Logger
 from onedata_lambda_sdk.oneclient import mounted_file_path
 
 
 DOI_RESOLVER_URL = "https://doi.org"
 REQUEST_TIMEOUT = (30, 300)  # (connect, read) seconds
 CHUNK_SIZE = 4 * 1024**2
+
+LOG_STREAM = "logs"  # must equal a filePipe result named "logs" in the lambda schema
+PROGRESS_INTERVAL_SEC = 30.0
 
 _DOI_PREFIXES = re.compile(r"^(https?://(dx\.)?doi\.org/|doi:)", re.IGNORECASE)
 _DOI_PATTERN = re.compile(r"^10\.\d{4,9}/\S+$")
@@ -47,18 +51,26 @@ class JobResult(TypedDict):
 
 @per_job(max_workers=1)
 def handle(job: Job[JobArgs], ctx: JobContext[dict]) -> JobResult:
+    progress = _Progress(ctx)
     doi = _normalize_doi(job.args["doi"])
     destination = _destination_path(job.args["destination"])
+    progress.stage(f"Lambda initialized for DOI {doi}")
 
     with requests.Session() as session, tempfile.TemporaryDirectory() as tmp_dir:
+        progress.stage("Resolving DOI and fetching record metadata")
         record = _fetch_record(session, doi)
         archive_url = (record.get("links") or {}).get("archive")
         if not archive_url:
             raise JobException(f"Record of DOI {doi} has no files archive link (links.archive)")
 
+        progress.stage(f"Downloading dataset from {archive_url}")
         archive_path = os.path.join(tmp_dir, "archive.zip")
-        _download(session, archive_url, archive_path, ctx.heartbeat)
-        files_count, total_bytes = _extract(archive_path, destination, tmp_dir, ctx.heartbeat)
+        downloaded = _download(session, archive_url, archive_path, progress)
+        progress.stage(f"Dataset downloaded ({_megabytes(downloaded)})")
+
+        progress.stage("Extracting dataset and uploading it to Onedata")
+        files_count, total_bytes = _extract(archive_path, destination, tmp_dir, progress)
+        progress.stage(f"Finished: uploaded {files_count} files ({_megabytes(total_bytes)})")
 
     return {
         "summary": {
@@ -68,6 +80,45 @@ def handle(job: Job[JobArgs], ctx: JobContext[dict]) -> JobResult:
             "totalBytes": total_bytes,
         }
     }
+
+
+class _Progress:
+    """
+    Reports progress to the lambda's audit-log stream and keeps the job alive.
+
+    Stage changes are logged immediately; `update` is called per copied chunk and logs
+    at most once per `PROGRESS_INTERVAL_SEC`. Logging never fails the job: if the log
+    stream cannot be written (e.g. the `logs` result is not declared in the lambda
+    schema), progress reporting is switched off and the work continues.
+    """
+
+    def __init__(self, ctx: JobContext[dict]) -> None:
+        self._heartbeat = ctx.heartbeat
+        self._logger: Logger | None = ctx.logger(LOG_STREAM)
+        self._last_update = time.monotonic()
+        self.files = 0
+        self.bytes = 0
+
+    def stage(self, message: str) -> None:
+        self._last_update = time.monotonic()
+        self._log(message)
+
+    def update(self, message: str) -> None:
+        self._heartbeat()
+        if time.monotonic() - self._last_update >= PROGRESS_INTERVAL_SEC:
+            self.stage(message)
+
+    def _log(self, message: str) -> None:
+        if self._logger is None:
+            return
+        try:
+            self._logger.info(message)
+        except OSError:
+            self._logger = None
+
+
+def _megabytes(size: int) -> str:
+    return f"{size / 1024**2:.1f} MB"
 
 
 def _normalize_doi(raw: object) -> str:
@@ -136,20 +187,23 @@ def _get(session: requests.Session, url: str, action: str, **kwargs) -> requests
 
 
 def _download(
-    session: requests.Session, url: str, target_path: str, heartbeat: Callable[[], None]
-) -> None:
+    session: requests.Session, url: str, target_path: str, progress: _Progress
+) -> int:
     response = _get(session, url, "download files archive", stream=True)
+    downloaded = 0
     try:
         with response, open(target_path, "wb") as target:
             for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                 target.write(chunk)
-                heartbeat()
+                downloaded += len(chunk)
+                progress.update(f"Downloaded {_megabytes(downloaded)}")
     except requests.RequestException as ex:
         raise JobException(f"Download of files archive was interrupted: {ex}") from ex
+    return downloaded
 
 
 def _extract(
-    archive_path: str, destination: str, tmp_dir: str, heartbeat: Callable[[], None]
+    archive_path: str, destination: str, tmp_dir: str, progress: _Progress
 ) -> tuple[int, int]:
     """
     Extract the record's files archive into `destination`.
@@ -157,36 +211,23 @@ def _extract(
     Returns (number of files written, their total size). Record files that are
     zip archives are extracted into the directory they would have been stored in.
     """
-    files_count = total_bytes = 0
     with _open_zip(archive_path, "files archive") as archive:
         for member in archive.infolist():
-            if member.is_dir():
-                os.makedirs(_target_path(destination, member.filename), exist_ok=True)
-                continue
-
-            if not member.filename.lower().endswith(".zip"):
-                total_bytes += _extract_member(archive, member, destination, heartbeat)
-                files_count += 1
+            if member.is_dir() or not member.filename.lower().endswith(".zip"):
+                _extract_member(archive, member, destination, progress)
                 continue
 
             nested_path = os.path.join(tmp_dir, "nested.zip")
             with archive.open(member) as source, open(nested_path, "wb") as target:
-                _copy(source, target, heartbeat)
+                while chunk := source.read(CHUNK_SIZE):
+                    target.write(chunk)
+                    progress.update(f"Unpacking {member.filename}")
             nested_destination = os.path.dirname(_target_path(destination, member.filename))
             with _open_zip(nested_path, member.filename) as nested:
                 for nested_member in nested.infolist():
-                    if nested_member.is_dir():
-                        os.makedirs(
-                            _target_path(nested_destination, nested_member.filename),
-                            exist_ok=True,
-                        )
-                        continue
-                    total_bytes += _extract_member(
-                        nested, nested_member, nested_destination, heartbeat
-                    )
-                    files_count += 1
+                    _extract_member(nested, nested_member, nested_destination, progress)
             os.remove(nested_path)
-    return files_count, total_bytes
+    return progress.files, progress.bytes
 
 
 def _open_zip(path: str, name: str) -> zipfile.ZipFile:
@@ -197,15 +238,21 @@ def _open_zip(path: str, name: str) -> zipfile.ZipFile:
 
 
 def _extract_member(
-    archive: zipfile.ZipFile,
-    member: zipfile.ZipInfo,
-    destination: str,
-    heartbeat: Callable[[], None],
-) -> int:
+    archive: zipfile.ZipFile, member: zipfile.ZipInfo, destination: str, progress: _Progress
+) -> None:
     target_path = _target_path(destination, member.filename)
+    if member.is_dir():
+        os.makedirs(target_path, exist_ok=True)
+        return
     os.makedirs(os.path.dirname(target_path), exist_ok=True)
     with archive.open(member) as source, open(target_path, "wb") as target:
-        return _copy(source, target, heartbeat)
+        while chunk := source.read(CHUNK_SIZE):
+            target.write(chunk)
+            progress.bytes += len(chunk)
+            progress.update(
+                f"Uploaded {progress.files} files ({_megabytes(progress.bytes)}) to Onedata"
+            )
+    progress.files += 1
 
 
 def _target_path(destination: str, member_name: str) -> str:
@@ -214,12 +261,3 @@ def _target_path(destination: str, member_name: str) -> str:
     if not parts or ".." in parts:
         raise JobException(f"Archive contains an unsafe file path: {member_name!r}")
     return os.path.join(destination, *parts)
-
-
-def _copy(source: IO[bytes], target: IO[bytes], heartbeat: Callable[[], None]) -> int:
-    copied = 0
-    while chunk := source.read(CHUNK_SIZE):
-        target.write(chunk)
-        copied += len(chunk)
-        heartbeat()
-    return copied
