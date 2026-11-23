@@ -46,7 +46,7 @@ Results:
 | Name | Type | Description |
 |------|------|-------------|
 | `summary` | Object | `{"doi", "recordUrl", "filesCount", "totalBytes"}` of the extracted dataset |
-| `logs` | Object, relayed via **file pipe** | Progress log entries (`{"severity", "content"}`) |
+| `logs` | Object, relayed via **file pipe** | Progress log entries (`{"severity", "content": {"description"}}`) |
 
 To see the progress while the lambda runs, map the `logs` result to the task
 audit log (or the workflow audit log) in the workflow's task definition. The

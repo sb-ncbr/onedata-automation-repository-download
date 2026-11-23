@@ -154,7 +154,7 @@ def test_logs_progress_stages(repository, destination, tmp_path):
     result = _run_local(tmp_path)
 
     assert result.streams["logs"] == [
-        {"severity": "info", "content": content}
+        {"severity": "info", "content": {"description": content}}
         for content in [
             f"Lambda initialized for DOI {DOI}",
             "Resolving DOI and fetching record metadata",
@@ -170,7 +170,7 @@ def test_logs_periodic_progress(repository, destination, tmp_path, monkeypatch):
     monkeypatch.setattr(handler, "PROGRESS_INTERVAL_SEC", 0.0)
     _serve_record(repository, _zip({"a.txt": b"a"}))
 
-    contents = [entry["content"] for entry in _run_local(tmp_path).streams["logs"]]
+    contents = [entry["content"]["description"] for entry in _run_local(tmp_path).streams["logs"]]
 
     assert "Downloaded 0.0 MB" in contents
     assert "Uploaded 0 files (0.0 MB) to Onedata" in contents

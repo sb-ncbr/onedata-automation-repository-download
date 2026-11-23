@@ -112,7 +112,7 @@ class _Progress:
         if self._logger is None:
             return
         try:
-            self._logger.info(message)
+            self._logger.info({"description": message})
         except OSError:
             self._logger = None
 
