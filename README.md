@@ -24,8 +24,15 @@ as they are. Existing files with the same path are overwritten.
 
 ## Lambda definition
 
-Register the image as a lambda in your automation inventory with these
-settings:
+A ready-made definition is in
+[`repository download 1.3.json`](repository%20download%201.3.json): a lambda
+dump exported from Onedata that can be uploaded into an automation inventory
+instead of filling the lambda in by hand. It points at the image
+`registry.gitlab.ics.muni.cz:443/485733/onedata-automation-repository-download:1.3`
+and declares the arguments and results listed below.
+
+To define the lambda manually, register the image in your automation inventory
+with these settings:
 
 | Setting | Value |
 |---------|-------|

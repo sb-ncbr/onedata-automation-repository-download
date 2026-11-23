@@ -1,0 +1,119 @@
+{
+  "schemaFormatVersion": 3,
+  "revision": {
+    "schemaFormatVersion": 3,
+    "originalRevisionNumber": 5,
+    "atmLambdaRevision": {
+      "_version": 1,
+      "_data": {
+        "summary": "",
+        "state": "stable",
+        "resultSpecs": [
+          {
+            "_version": 1,
+            "_data": {
+              "relayMethod": "returnValue",
+              "name": "summary",
+              "dataSpec": {
+                "_version": 2,
+                "_data": {
+                  "type": "object",
+                  "_version": 1,
+                  "_data": {}
+                }
+              }
+            }
+          },
+          {
+            "_version": 1,
+            "_data": {
+              "relayMethod": "filePipe",
+              "name": "logs",
+              "dataSpec": {
+                "_version": 2,
+                "_data": {
+                  "type": "object",
+                  "_version": 1,
+                  "_data": {}
+                }
+              }
+            }
+          }
+        ],
+        "resourceSpec": {
+          "_version": 1,
+          "_data": {
+            "memoryRequested": 104857600,
+            "memoryLimit": null,
+            "ephemeralStorageRequested": 104857600,
+            "ephemeralStorageLimit": null,
+            "cpuRequested": 0.1,
+            "cpuLimit": null
+          }
+        },
+        "preferredBatchSize": 10,
+        "operationSpec": {
+          "_version": 1,
+          "_data": {
+            "engine": "openfaas",
+            "_version": 1,
+            "_data": {
+              "dockerImage": "registry.gitlab.ics.muni.cz:443/485733/onedata-automation-repository-download:1.3",
+              "dockerExecutionOptions": {
+                "readonly": false,
+                "oneclientOptions": "",
+                "oneclientMountPoint": "/mnt/onedata",
+                "mountOneclient": true
+              }
+            }
+          }
+        },
+        "name": "repository download 1.3",
+        "description": "",
+        "configParameterSpecs": [],
+        "argumentSpecs": [
+          {
+            "_version": 1,
+            "_data": {
+              "name": "doi",
+              "isOptional": false,
+              "defaultValue": null,
+              "dataSpec": {
+                "_version": 2,
+                "_data": {
+                  "type": "string",
+                  "_version": 1,
+                  "_data": {
+                    "allowedValues": null
+                  }
+                }
+              }
+            }
+          },
+          {
+            "_version": 1,
+            "_data": {
+              "name": "destination",
+              "isOptional": false,
+              "defaultValue": null,
+              "dataSpec": {
+                "_version": 2,
+                "_data": {
+                  "type": "file",
+                  "_version": 1,
+                  "_data": {
+                    "fileType": "DIR",
+                    "attributes": [
+                      "fileId"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "originalAtmLambdaId": "4ef18fce58ef07c1e1f737f76e6b8980ch84f6"
+}
