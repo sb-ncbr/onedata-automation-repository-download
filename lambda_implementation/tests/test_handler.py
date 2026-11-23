@@ -149,7 +149,8 @@ def test_extracts_zip_files_of_the_record_in_place(repository, destination, tmp_
 
 
 def test_logs_progress_stages(repository, destination, tmp_path):
-    _serve_record(repository, _zip({"readme.txt": b"hello", "data/a.csv": b"1,2,3"}))
+    archive = _zip({"readme.txt": b"hello", "data/a.csv": b"1,2,3"})
+    _serve_record(repository, archive)
 
     result = _run_local(tmp_path)
 
@@ -159,21 +160,22 @@ def test_logs_progress_stages(repository, destination, tmp_path):
             f"Lambda initialized for DOI {DOI}",
             "Resolving DOI and fetching record metadata",
             f"Downloading dataset from {repository.url}/api/records/abcde-12345/files-archive",
-            "Dataset downloaded (0.0 MB)",
+            f"Dataset downloaded ({len(archive)} B)",
             "Extracting dataset and uploading it to Onedata",
-            "Finished: uploaded 2 files (0.0 MB)",
+            "Finished: uploaded 2 files (10 B)",
         ]
     ]
 
 
 def test_logs_periodic_progress(repository, destination, tmp_path, monkeypatch):
     monkeypatch.setattr(handler, "PROGRESS_INTERVAL_SEC", 0.0)
-    _serve_record(repository, _zip({"a.txt": b"a"}))
+    archive = _zip({"a.txt": b"a"})
+    _serve_record(repository, archive)
 
     contents = [entry["content"]["description"] for entry in _run_local(tmp_path).streams["logs"]]
 
-    assert "Downloaded 0.0 MB" in contents
-    assert "Uploaded 0 files (0.0 MB) to Onedata" in contents
+    assert f"Downloaded {len(archive)} B" in contents
+    assert "Uploaded 0 files (1 B) to Onedata" in contents
 
 
 def test_works_when_log_stream_is_not_writable(repository, destination, tmp_path, monkeypatch):
@@ -184,6 +186,22 @@ def test_works_when_log_stream_is_not_writable(repository, destination, tmp_path
 
     assert envelope["resultsBatch"][0]["summary"]["filesCount"] == 1
     assert _tree(destination) == {"a.txt": b"a"}
+
+
+@pytest.mark.parametrize(
+    ("size", "expected"),
+    [
+        (0, "0 B"),
+        (1023, "1023 B"),
+        (1024, "1.0 kB"),
+        (1536, "1.5 kB"),
+        (232397522, "221.6 MB"),
+        (5 * 1024**3, "5.0 GB"),
+        (5000 * 1024**3, "5000.0 GB"),
+    ],
+)
+def test_human_size(size, expected):
+    assert handler._human_size(size) == expected
 
 
 def test_falls_back_to_api_when_landing_page_is_html(repository, destination, tmp_path):

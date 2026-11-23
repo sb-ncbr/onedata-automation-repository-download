@@ -66,11 +66,11 @@ def handle(job: Job[JobArgs], ctx: JobContext[dict]) -> JobResult:
         progress.stage(f"Downloading dataset from {archive_url}")
         archive_path = os.path.join(tmp_dir, "archive.zip")
         downloaded = _download(session, archive_url, archive_path, progress)
-        progress.stage(f"Dataset downloaded ({_megabytes(downloaded)})")
+        progress.stage(f"Dataset downloaded ({_human_size(downloaded)})")
 
         progress.stage("Extracting dataset and uploading it to Onedata")
         files_count, total_bytes = _extract(archive_path, destination, tmp_dir, progress)
-        progress.stage(f"Finished: uploaded {files_count} files ({_megabytes(total_bytes)})")
+        progress.stage(f"Finished: uploaded {files_count} files ({_human_size(total_bytes)})")
 
     return {
         "summary": {
@@ -117,8 +117,16 @@ class _Progress:
             self._logger = None
 
 
-def _megabytes(size: int) -> str:
-    return f"{size / 1024**2:.1f} MB"
+def _human_size(size: int) -> str:
+    """Size in the largest unit that keeps the number at 1 or above, e.g. `12 B`, `3.4 MB`."""
+    if size < 1024:
+        return f"{size} B"
+    value = float(size)
+    for unit in ("kB", "MB", "GB"):
+        value /= 1024
+        if value < 1024:
+            break
+    return f"{value:.1f} {unit}"
 
 
 def _normalize_doi(raw: object) -> str:
@@ -196,7 +204,7 @@ def _download(
             for chunk in response.iter_content(chunk_size=CHUNK_SIZE):
                 target.write(chunk)
                 downloaded += len(chunk)
-                progress.update(f"Downloaded {_megabytes(downloaded)}")
+                progress.update(f"Downloaded {_human_size(downloaded)}")
     except requests.RequestException as ex:
         raise JobException(f"Download of files archive was interrupted: {ex}") from ex
     return downloaded
@@ -250,7 +258,7 @@ def _extract_member(
             target.write(chunk)
             progress.bytes += len(chunk)
             progress.update(
-                f"Uploaded {progress.files} files ({_megabytes(progress.bytes)}) to Onedata"
+                f"Uploaded {progress.files} files ({_human_size(progress.bytes)}) to Onedata"
             )
     progress.files += 1
 
