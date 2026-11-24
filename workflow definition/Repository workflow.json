@@ -1,0 +1,557 @@
+{
+  "summary": "",
+  "schemaFormatVersion": 3,
+  "revision": {
+    "supplementaryAtmLambdas": {
+      "bd96e2dcd7352c816dfe2303d3664e5dch41ca": {
+        "1": {
+          "schemaFormatVersion": 3,
+          "revision": {
+            "schemaFormatVersion": 3,
+            "originalRevisionNumber": 1,
+            "atmLambdaRevision": {
+              "_version": 1,
+              "_data": {
+                "summary": "",
+                "state": "stable",
+                "resultSpecs": [
+                  {
+                    "_version": 1,
+                    "_data": {
+                      "relayMethod": "returnValue",
+                      "name": "result",
+                      "dataSpec": {
+                        "_version": 2,
+                        "_data": {
+                          "type": "object",
+                          "_version": 1,
+                          "_data": {}
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "_version": 1,
+                    "_data": {
+                      "relayMethod": "returnValue",
+                      "name": "result2",
+                      "dataSpec": {
+                        "_version": 2,
+                        "_data": {
+                          "type": "string",
+                          "_version": 1,
+                          "_data": {
+                            "allowedValues": null
+                          }
+                        }
+                      }
+                    }
+                  }
+                ],
+                "resourceSpec": {
+                  "_version": 1,
+                  "_data": {
+                    "memoryRequested": 104857600,
+                    "memoryLimit": null,
+                    "ephemeralStorageRequested": 104857600,
+                    "ephemeralStorageLimit": null,
+                    "cpuRequested": 0.1,
+                    "cpuLimit": null
+                  }
+                },
+                "preferredBatchSize": 10,
+                "operationSpec": {
+                  "_version": 1,
+                  "_data": {
+                    "engine": "openfaas",
+                    "_version": 1,
+                    "_data": {
+                      "dockerImage": "registry.gitlab.ics.muni.cz:443/cellim/metadata-reader/onedata-metadata-automation-public-registry:1.23",
+                      "dockerExecutionOptions": {
+                        "readonly": false,
+                        "oneclientOptions": "",
+                        "oneclientMountPoint": "/mnt/onedata",
+                        "mountOneclient": true
+                      }
+                    }
+                  }
+                },
+                "name": "microscope metadata extraction 1.23",
+                "description": "",
+                "configParameterSpecs": [],
+                "argumentSpecs": [
+                  {
+                    "_version": 1,
+                    "_data": {
+                      "name": "file",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "dataSpec": {
+                        "_version": 2,
+                        "_data": {
+                          "type": "file",
+                          "_version": 1,
+                          "_data": {
+                            "fileType": "ANY",
+                            "attributes": [
+                              "fileId",
+                              "name"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "originalAtmLambdaId": "bd96e2dcd7352c816dfe2303d3664e5dch41ca"
+        }
+      },
+      "4ef18fce58ef07c1e1f737f76e6b8980ch84f6": {
+        "6": {
+          "schemaFormatVersion": 3,
+          "revision": {
+            "schemaFormatVersion": 3,
+            "originalRevisionNumber": 6,
+            "atmLambdaRevision": {
+              "_version": 1,
+              "_data": {
+                "summary": "",
+                "state": "stable",
+                "resultSpecs": [
+                  {
+                    "_version": 1,
+                    "_data": {
+                      "relayMethod": "returnValue",
+                      "name": "summary",
+                      "dataSpec": {
+                        "_version": 2,
+                        "_data": {
+                          "type": "object",
+                          "_version": 1,
+                          "_data": {}
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "_version": 1,
+                    "_data": {
+                      "relayMethod": "filePipe",
+                      "name": "logs",
+                      "dataSpec": {
+                        "_version": 2,
+                        "_data": {
+                          "type": "object",
+                          "_version": 1,
+                          "_data": {}
+                        }
+                      }
+                    }
+                  }
+                ],
+                "resourceSpec": {
+                  "_version": 1,
+                  "_data": {
+                    "memoryRequested": 104857600,
+                    "memoryLimit": null,
+                    "ephemeralStorageRequested": 104857600,
+                    "ephemeralStorageLimit": null,
+                    "cpuRequested": 0.1,
+                    "cpuLimit": null
+                  }
+                },
+                "preferredBatchSize": 10,
+                "operationSpec": {
+                  "_version": 1,
+                  "_data": {
+                    "engine": "openfaas",
+                    "_version": 1,
+                    "_data": {
+                      "dockerImage": "ghcr.io/sb-ncbr/onedata-automation-repository-download:1.3",
+                      "dockerExecutionOptions": {
+                        "readonly": false,
+                        "oneclientOptions": "",
+                        "oneclientMountPoint": "/mnt/onedata",
+                        "mountOneclient": true
+                      }
+                    }
+                  }
+                },
+                "name": "repository download 1.3",
+                "description": "",
+                "configParameterSpecs": [],
+                "argumentSpecs": [
+                  {
+                    "_version": 1,
+                    "_data": {
+                      "name": "doi",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "dataSpec": {
+                        "_version": 2,
+                        "_data": {
+                          "type": "string",
+                          "_version": 1,
+                          "_data": {
+                            "allowedValues": null
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "_version": 1,
+                    "_data": {
+                      "name": "destination",
+                      "isOptional": false,
+                      "defaultValue": null,
+                      "dataSpec": {
+                        "_version": 2,
+                        "_data": {
+                          "type": "file",
+                          "_version": 1,
+                          "_data": {
+                            "fileType": "DIR",
+                            "attributes": [
+                              "fileId"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "originalAtmLambdaId": "4ef18fce58ef07c1e1f737f76e6b8980ch84f6"
+        }
+      }
+    },
+    "schemaFormatVersion": 3,
+    "originalRevisionNumber": 4,
+    "atmWorkflowSchemaRevision": {
+      "_version": 1,
+      "_data": {
+        "stores": [
+          {
+            "_version": 1,
+            "_data": {
+              "type": "singleValue",
+              "requiresInitialContent": true,
+              "name": "dataset directory",
+              "id": "16f9e3498331268af34a782aab71b0ba1c87f5",
+              "description": "",
+              "defaultInitialContent": null,
+              "config": {
+                "_version": 1,
+                "_data": {
+                  "itemDataSpec": {
+                    "_version": 2,
+                    "_data": {
+                      "type": "file",
+                      "_version": 1,
+                      "_data": {
+                        "fileType": "DIR",
+                        "attributes": null
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "_version": 1,
+            "_data": {
+              "type": "list",
+              "requiresInitialContent": false,
+              "name": "download summary",
+              "id": "f1f6676a8b3f044baa044b2b37b4d43d509c25",
+              "description": "",
+              "defaultInitialContent": null,
+              "config": {
+                "_version": 1,
+                "_data": {
+                  "itemDataSpec": {
+                    "_version": 2,
+                    "_data": {
+                      "type": "object",
+                      "_version": 1,
+                      "_data": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "_version": 1,
+            "_data": {
+              "type": "singleValue",
+              "requiresInitialContent": true,
+              "name": "DOI",
+              "id": "bf3e3a5126792a694640c35ba5b3e320e70dee",
+              "description": "",
+              "defaultInitialContent": null,
+              "config": {
+                "_version": 1,
+                "_data": {
+                  "itemDataSpec": {
+                    "_version": 2,
+                    "_data": {
+                      "type": "string",
+                      "_version": 1,
+                      "_data": {
+                        "allowedValues": null
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "_version": 1,
+            "_data": {
+              "type": "list",
+              "requiresInitialContent": false,
+              "name": "metadata summary",
+              "id": "308c7771cdfb5940a292b862fc77c7862b75a4",
+              "description": "",
+              "defaultInitialContent": null,
+              "config": {
+                "_version": 1,
+                "_data": {
+                  "itemDataSpec": {
+                    "_version": 2,
+                    "_data": {
+                      "type": "object",
+                      "_version": 1,
+                      "_data": {}
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "_version": 1,
+            "_data": {
+              "type": "treeForest",
+              "requiresInitialContent": true,
+              "name": "metadata input",
+              "id": "972beba31ee94eee6f89f915a6280fa7f4924e",
+              "description": "",
+              "defaultInitialContent": null,
+              "config": {
+                "_version": 1,
+                "_data": {
+                  "itemDataSpec": {
+                    "_version": 2,
+                    "_data": {
+                      "type": "file",
+                      "_version": 1,
+                      "_data": {
+                        "fileType": "ANY",
+                        "attributes": null
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "state": "stable",
+        "lanes": [
+          {
+            "_version": 1,
+            "_data": {
+              "storeIteratorSpec": {
+                "_version": 1,
+                "_data": {
+                  "storeSchemaId": "16f9e3498331268af34a782aab71b0ba1c87f5",
+                  "maxBatchSize": 10
+                }
+              },
+              "parallelBoxes": [
+                {
+                  "_version": 1,
+                  "_data": {
+                    "tasks": [
+                      {
+                        "_version": 1,
+                        "_data": {
+                          "timeSeriesStoreConfig": null,
+                          "resultMappings": [
+                            {
+                              "_version": 1,
+                              "_data": {
+                                "storeSchemaId": "f1f6676a8b3f044baa044b2b37b4d43d509c25",
+                                "storeContentUpdateOptions": {
+                                  "_version": 1,
+                                  "_data": {
+                                    "type": "listStoreContentUpdateOptions",
+                                    "_version": 1,
+                                    "_data": {
+                                      "function": "append"
+                                    }
+                                  }
+                                },
+                                "resultName": "summary"
+                              }
+                            },
+                            {
+                              "_version": 1,
+                              "_data": {
+                                "storeSchemaId": "CURRENT_TASK_SYSTEM_AUDIT_LOG",
+                                "storeContentUpdateOptions": {
+                                  "_version": 1,
+                                  "_data": {
+                                    "type": "auditLogStoreContentUpdateOptions",
+                                    "_version": 1,
+                                    "_data": {
+                                      "function": "append"
+                                    }
+                                  }
+                                },
+                                "resultName": "logs"
+                              }
+                            }
+                          ],
+                          "resourceSpecOverride": null,
+                          "name": "onedata-automation-repository-download:1.1",
+                          "lambdaRevisionNumber": 6,
+                          "lambdaId": "4ef18fce58ef07c1e1f737f76e6b8980ch84f6",
+                          "lambdaConfig": {},
+                          "id": "b337adf327f3d5136d3587d31e6700135a5aab",
+                          "argumentMappings": [
+                            {
+                              "_version": 1,
+                              "_data": {
+                                "valueBuilder": {
+                                  "_version": 1,
+                                  "_data": {
+                                    "valueBuilderType": "singleValueStoreContent",
+                                    "valueBuilderRecipe": "bf3e3a5126792a694640c35ba5b3e320e70dee"
+                                  }
+                                },
+                                "argumentName": "doi"
+                              }
+                            },
+                            {
+                              "_version": 1,
+                              "_data": {
+                                "valueBuilder": {
+                                  "_version": 1,
+                                  "_data": {
+                                    "valueBuilderType": "singleValueStoreContent",
+                                    "valueBuilderRecipe": "16f9e3498331268af34a782aab71b0ba1c87f5"
+                                  }
+                                },
+                                "argumentName": "destination"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "name": "Parallel box",
+                    "id": "080e760a04698f2128258616ea7e61eb6fb1d3"
+                  }
+                }
+              ],
+              "name": "Download Repository",
+              "maxRetries": 0,
+              "instantFailureExceptionThreshold": 0.1,
+              "id": "5b73115d6d5d9198d4923108fc3902315cf697",
+              "dashboardSpec": null
+            }
+          },
+          {
+            "_version": 1,
+            "_data": {
+              "storeIteratorSpec": {
+                "_version": 1,
+                "_data": {
+                  "storeSchemaId": "972beba31ee94eee6f89f915a6280fa7f4924e",
+                  "maxBatchSize": 10
+                }
+              },
+              "parallelBoxes": [
+                {
+                  "_version": 1,
+                  "_data": {
+                    "tasks": [
+                      {
+                        "_version": 1,
+                        "_data": {
+                          "timeSeriesStoreConfig": null,
+                          "resultMappings": [
+                            {
+                              "_version": 1,
+                              "_data": {
+                                "storeSchemaId": "308c7771cdfb5940a292b862fc77c7862b75a4",
+                                "storeContentUpdateOptions": {
+                                  "_version": 1,
+                                  "_data": {
+                                    "type": "listStoreContentUpdateOptions",
+                                    "_version": 1,
+                                    "_data": {
+                                      "function": "append"
+                                    }
+                                  }
+                                },
+                                "resultName": "result"
+                              }
+                            }
+                          ],
+                          "resourceSpecOverride": null,
+                          "name": "microscope metadata extraction 1.23",
+                          "lambdaRevisionNumber": 1,
+                          "lambdaId": "bd96e2dcd7352c816dfe2303d3664e5dch41ca",
+                          "lambdaConfig": {},
+                          "id": "1cca454d41350fead3757506be78d62d64ee2e",
+                          "argumentMappings": [
+                            {
+                              "_version": 1,
+                              "_data": {
+                                "valueBuilder": {
+                                  "_version": 1,
+                                  "_data": {
+                                    "valueBuilderType": "iteratedItem",
+                                    "valueBuilderRecipe": null
+                                  }
+                                },
+                                "argumentName": "file"
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ],
+                    "name": "Parallel box",
+                    "id": "49ac8a12a7901e1a3f4674d03d8e1bc2169660"
+                  }
+                }
+              ],
+              "name": "Extract Metadata",
+              "maxRetries": 0,
+              "instantFailureExceptionThreshold": 0.1,
+              "id": "45282e2d561bce203ef1256f26f2716bcb8b71",
+              "dashboardSpec": null
+            }
+          }
+        ],
+        "description": "This workflow automates dataset ingestion by downloading a ZIP archive from a repository, extracting its contents to a target directory in Onedata, and writing the extracted metadata to the files' extended attributes (xattrs).\nDownload lambda writes log messages to current task log.",
+        "dashboardSpec": null
+      }
+    }
+  },
+  "originalAtmWorkflowSchemaId": "1223e6d4fbb153f627cd9fd079ce06f3ch6a51",
+  "name": "Repository workflow"
+}
